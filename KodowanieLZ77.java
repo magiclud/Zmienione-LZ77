@@ -11,8 +11,8 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 
 public class KodowanieLZ77 {
-	private static final int BuferKodowaniaRozmiar = 4;
-	private static final int BuferSlownikaRozmiar = 4;
+	private static final int BuferKodowaniaRozmiar = 128;
+	private static final int BuferSlownikaRozmiar = 255;
 
 	private String wejscie;
 	private String bufSlownikowy = ""; 
@@ -34,12 +34,14 @@ public class KodowanieLZ77 {
 //		fw.close();
 		byte[] wyjscie = new byte[listaKodow.size()*2];
 		int i=-1;
+		System.out.println("\n_____________________________________" );
 		for(Kod x: listaKodow){
 			wyjscie[++i] = x.getPrzesWSlown();
-			System.out.print(" "+ wyjscie[i]+ " " );
+		//	System.out.print(" "+ wyjscie[i]+ " " );
 			wyjscie[++i] = x.getIleSkopiowac();
-			System.out.print(" "+ wyjscie[i]+ " " );
+		//	System.out.print(" "+ wyjscie[i]+ " " );
 		}
+		System.out.println("_____________________________________\n" );
 		BufferedOutputStream bos = null;
 		try {
 			FileOutputStream fs = new FileOutputStream(new File(nazwaPliku));
@@ -65,14 +67,16 @@ public class KodowanieLZ77 {
 //				wyjscieKody.append(podciag);
 				byte i = (byte)0;
 				byte j = (byte)podciag.charAt(0);
+			//	System.out.print("    "+ 0+ " "+ podciag.charAt(0));
 				listaKodow.add(new Kod(i,j));
 				//usun 1 elem z bufKodowania i dodaj go do bufSlownika
 				znak = wejscie.substring(bufKodowaniaPtr, bufKodowaniaPtr+1);
-				System.out.println("Usunięto z bufKodowania: "+ znak);
+			
 				//aktualizujBufSlow 
-				bufSlownikowy = bufSlownikowy.substring(1); //skroc o ten pierwszy znak
+				
 				bufSlownikowy += znak;
-				System.out.println("Dodano do bufSlownikowego 1 znak, teraz bufSlown: "+ bufSlownikowy);
+				aktualizujBufSlownikowy();
+			//	System.out.println("Dodano do bufSlownikowego 1 znak, teraz bufSlown: "+ bufSlownikowy);
 				
 				//aktualizuj odkodowana ilosc 
 				bufKodowaniaPtr ++;
@@ -100,22 +104,38 @@ public class KodowanieLZ77 {
 				
 				znak =  wejscie.substring(bufKodowaniaPtr, bufKodowaniaPtr+liczbaPasujacychZnakow);
 				indexPasujacy = bufSlownikowy.indexOf(znak);// tutaj mam informacje o gdzie w slowniku znajduje sie podciag
-				int przesuniecie = BuferSlownikaRozmiar - indexPasujacy;
+				int przesuniecie=0;
+//				if(bufSlownikowy.length()>=BuferSlownikaRozmiar){
+//				   przesuniecie = BuferSlownikaRozmiar - indexPasujacy;
+//				}else{
+					przesuniecie= bufSlownikowy.length() - indexPasujacy;
+			//	}
 //				wyjscieKody.append(przesuniecie);
 //				wyjscieKody.append(znak.length());
 				byte i = (byte)przesuniecie;
-				byte j = (byte)znak.length();
+				byte j = (byte)liczbaPasujacychZnakow;
+				System.out.print("    "+ przesuniecie+ " "+ liczbaPasujacychZnakow);
 				listaKodow.add(new Kod(i,j));
 				
 				
 				//aktualnij buferKodowania
 				bufKodowaniaPtr += znak.length();
 				//aktualnij bufSlownikowy
+				if(bufSlownikowy.length()>=BuferSlownikaRozmiar){
 				bufSlownikowy = bufSlownikowy.substring(znak.length());
+				}
 				bufSlownikowy +=znak;
+				aktualizujBufSlownikowy();
 					
 			}
 		}// end while loop
+	}
+
+	private void aktualizujBufSlownikowy() {
+		if(bufSlownikowy.length()>=BuferSlownikaRozmiar){
+			bufSlownikowy = bufSlownikowy.substring(bufSlownikowy.length()-BuferSlownikaRozmiar); //skroc o ten pierwszy znak
+			}
+		
 	}
 
 	private void inicjalizujDane() throws IOException {
@@ -123,9 +143,9 @@ public class KodowanieLZ77 {
 //		wyjscieKody = new StringBuilder();
 		listaKodow = new ArrayList<Kod>();
 		bufKodowaniaPtr = 0;
-		for(int i=0; i<BuferSlownikaRozmiar; i++){
-			bufSlownikowy += " ";
-		}
+//		for(int i=0; i<BuferSlownikaRozmiar; i++){
+//			bufSlownikowy += " ";
+//		}
 	}
 
 	private void wczytajPlik() throws IOException {
