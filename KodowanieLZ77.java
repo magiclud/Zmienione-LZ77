@@ -1,11 +1,14 @@
 package lz77;
 
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 
 public class KodowanieLZ77 {
 	private static final int BuferKodowaniaRozmiar = 4;
@@ -13,8 +16,9 @@ public class KodowanieLZ77 {
 
 	private String wejscie;
 	private String bufSlownikowy = ""; 
-	private StringBuilder wyjscieKody;
+	//private StringBuilder wyjscieKody;
 	private int bufKodowaniaPtr; // okno kodowania
+	private ArrayList<Kod> listaKodow; 
 	
 	
 	public void zakoduj(String plikDoZakodowania, String plikWyjsciowy) throws IOException {
@@ -24,10 +28,29 @@ public class KodowanieLZ77 {
 	}
 
 	private void zapiszDoPliku(String nazwaPliku) throws IOException {
-		File newTextFile = new File(nazwaPliku);
-		FileWriter fw = new FileWriter(newTextFile);
-		fw.write(wyjscieKody.toString());
-		fw.close();
+//		File newTextFile = new File(nazwaPliku);
+//		FileWriter fw = new FileWriter(newTextFile);
+//		fw.write(wyjscieKody.toString());
+//		fw.close();
+		byte[] wyjscie = new byte[listaKodow.size()*2];
+		int i=-1;
+		for(Kod x: listaKodow){
+			wyjscie[++i] = x.getPrzesWSlown();
+			System.out.print(" "+ wyjscie[i]+ " " );
+			wyjscie[++i] = x.getIleSkopiowac();
+			System.out.print(" "+ wyjscie[i]+ " " );
+		}
+		BufferedOutputStream bos = null;
+		try {
+			FileOutputStream fs = new FileOutputStream(new File(nazwaPliku));
+			bos = new BufferedOutputStream(fs);
+			bos.write(wyjscie);
+			bos.close();
+			bos = null;
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		
 	}
 
@@ -38,8 +61,11 @@ public class KodowanieLZ77 {
 			if (bufSlownikowy.indexOf(podciag) == -1) {
 				//brak elementu w bufSlown.
 				//wyslij (0,kodZnaku)
-				wyjscieKody.append(0);
-				wyjscieKody.append(podciag);
+//				wyjscieKody.append(0);
+//				wyjscieKody.append(podciag);
+				byte i = (byte)0;
+				byte j = (byte)podciag.charAt(0);
+				listaKodow.add(new Kod(i,j));
 				//usun 1 elem z bufKodowania i dodaj go do bufSlownika
 				znak = wejscie.substring(bufKodowaniaPtr, bufKodowaniaPtr+1);
 				System.out.println("Usunięto z bufKodowania: "+ znak);
@@ -75,8 +101,12 @@ public class KodowanieLZ77 {
 				znak =  wejscie.substring(bufKodowaniaPtr, bufKodowaniaPtr+liczbaPasujacychZnakow);
 				indexPasujacy = bufSlownikowy.indexOf(znak);// tutaj mam informacje o gdzie w slowniku znajduje sie podciag
 				int przesuniecie = BuferSlownikaRozmiar - indexPasujacy;
-				wyjscieKody.append(przesuniecie);
-				wyjscieKody.append(znak.length());
+//				wyjscieKody.append(przesuniecie);
+//				wyjscieKody.append(znak.length());
+				byte i = (byte)przesuniecie;
+				byte j = (byte)znak.length();
+				listaKodow.add(new Kod(i,j));
+				
 				
 				//aktualnij buferKodowania
 				bufKodowaniaPtr += znak.length();
@@ -90,7 +120,8 @@ public class KodowanieLZ77 {
 
 	private void inicjalizujDane() throws IOException {
 		wczytajPlik();
-		wyjscieKody = new StringBuilder();
+//		wyjscieKody = new StringBuilder();
+		listaKodow = new ArrayList<Kod>();
 		bufKodowaniaPtr = 0;
 		for(int i=0; i<BuferSlownikaRozmiar; i++){
 			bufSlownikowy += " ";

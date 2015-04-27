@@ -1,10 +1,13 @@
 package lz77;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 
 public class DekodowanieLZ77 {
@@ -22,16 +25,15 @@ public class DekodowanieLZ77 {
 		inicjalizujDekodowanie(plik);
 		rozpocznijDekodowanie();
 		zapiszDoPliku();
-		
 	}
 
 	private void zapiszDoPliku() throws IOException {
 		String nazwaPliku = "dek_out.txt";
 		File newTextFile = new File(nazwaPliku);
 		FileWriter fw = new FileWriter(newTextFile);
-		String doPliku = wyjscieTekst.toString();
-		doPliku = doPliku.substring(BuferSlownikaRozmiar);
-		fw.write(doPliku);
+		String pom = wyjscieTekst.toString();
+		pom = pom.substring(BuferSlownikaRozmiar);
+		fw.write(pom);
 		fw.close();
 
 	}
@@ -105,18 +107,58 @@ public class DekodowanieLZ77 {
 	}
 
 	private void wczytajPlik(String plik) throws IOException {
-		File file = new File(plik);
-		BufferedReader br = new BufferedReader(new InputStreamReader(
-				new FileInputStream(file)));
-		StringBuffer content = new StringBuffer();
-		String line;
+//		File file = new File(plik);
+//		BufferedReader br = new BufferedReader(new InputStreamReader(
+//				new FileInputStream(file)));
+//		StringBuffer content = new StringBuffer();
+//		String line;
+//
+//		while ((line = br.readLine()) != null) {
+//			content.append(line);content.append('\n');
+//		}
+//		br.close();
+//		wejscieKody = content.toString();
+		System.out.println(" -------------------------------" );
+byte[] wczytaneBajty = czytanieBajtowZPliku(plik);
+for(int i=0; i<wczytaneBajty.length;i++){
+	System.out.print(" "+ wczytaneBajty[i]+ " " );
+}
+	}
+	public static byte[] czytanieBajtowZPliku(String nazwaPliku) {
+		File file = new File(nazwaPliku);
 
-		while ((line = br.readLine()) != null) {
-			content.append(line);content.append('\n');
+		ByteArrayOutputStream byteArrayOutputStream = null;
+		InputStream inputStream = null;
+		byte[] readedBytes = null;
+		try {
+			readedBytes = new byte[(int) file.length()];
+			byteArrayOutputStream = new ByteArrayOutputStream();
+			inputStream = new FileInputStream(file);
+			int read = 0;
+			while ((read = inputStream.read(readedBytes)) != -1) {
+				byteArrayOutputStream.write(readedBytes, 0, read);
+			}
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} finally {
+			try {
+				if (byteArrayOutputStream != null)
+					byteArrayOutputStream.close();
+			} catch (IOException e) {
+			}
+
+			try {
+				if (inputStream != null)
+					inputStream.close();
+			} catch (IOException e) {
+			}
 		}
-		br.close();
-		wejscieKody = content.toString();
+
+		return readedBytes;
 
 	}
-
 }
